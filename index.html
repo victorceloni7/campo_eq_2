@@ -1,305 +1,1075 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cálculo de Campo Equivalente - Radioterapia</title>
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cálculo de Campo Colimado - Radioterapia 3D</title>
+  <!-- Jekyll Theme Architect CSS via jekyll-remote-theme -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://pages-themes.github.io/architect/assets/css/style.css">
   <style>
-    body{
-      font-family: Arial, sans-serif;
-      background:#f2f5f7;
-      margin:0;
-      padding:20px;
-      color:#222;
+    /* Architect Theme Customizations */
+    * {
+      box-sizing: border-box;
     }
 
-    h1{
-      text-align:center;
-      margin-bottom:10px;
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #333;
     }
 
-    .container{
-      display:flex;
-      gap:20px;
-      flex-wrap:wrap;
+    body {
+      background-color: #f2f2f2;
     }
 
-    .panel{
-      background:white;
-      border-radius:12px;
-      padding:16px;
-      box-shadow:0 2px 8px rgba(0,0,0,0.1);
-      flex:1;
-      min-width:320px;
+    /* Architect Container */
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      padding: 2rem;
+      margin-top: 1rem;
+      margin-bottom: 1rem;
     }
 
-    canvas{
-      border:1px solid #ccc;
-      max-width:100%;
-      cursor:crosshair;
+    /* Architect Header */
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+      border-bottom: 3px solid #003366;
+      padding-bottom: 1.5rem;
     }
 
-    label{
-      display:block;
-      margin-top:12px;
-      font-weight:bold;
+    .header h1 {
+      font-size: 32px;
+      font-weight: 700;
+      color: #003366;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -1px;
     }
 
-    input[type="range"]{
-      width:100%;
+    .header p {
+      font-size: 15px;
+      color: #003366;
+      margin: 8px 0;
     }
 
-    button{
-      margin-top:15px;
-      padding:10px 18px;
-      border:none;
-      border-radius:8px;
-      background:#0066cc;
-      color:white;
-      font-size:15px;
-      cursor:pointer;
+    /* Architect Typography */
+    h1, h2, h3, h4, h5, h6 {
+      margin: 1.5rem 0 0.5rem 0;
+      font-weight: 700;
+      letter-spacing: -1px;
+      color: #003366;
     }
 
-    button:hover{
-      background:#004e9e;
+    h1 { font-size: 28px; }
+    h2 { font-size: 24px; border-bottom: 2px solid #eee; padding-bottom: 0.5rem; }
+    h3 { font-size: 20px; }
+    h4 { font-size: 18px; color: #666; }
+
+    /* Status Message Panel */
+    .message-panel {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #003366 0%, #002244 100%);
+      color: #fff;
+      padding: 1rem 1.5rem;
+      border-radius: 4px;
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.3);
+      font-size: 13px;
+      font-weight: 600;
+      max-width: 280px;
+      z-index: 1000;
+      animation: slideInRight 0.3s ease;
+      letter-spacing: 0.3px;
     }
 
-    .result{
-      margin-top:20px;
-      background:#eef7ee;
-      padding:15px;
-      border-radius:10px;
-      font-size:18px;
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
     }
 
-    .info{
-      font-size:14px;
-      color:#555;
-      margin-top:10px;
+    /* Stats Cards - Architect Style */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-bottom: 2rem;
     }
 
-    .steps{
-      line-height:1.8;
+    .stat-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.15);
+      transform: translateY(-2px);
+      border-color: #003366;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #003366;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .stat-unit {
+      font-size: 14px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* Results Card - New style matching stats cards */
+    .equiv-card {
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.12) 0%, rgba(46, 204, 113, 0.06) 100%);
+      border: 2px solid #2ecc71;
+      border-radius: 4px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(46, 204, 113, 0.1);
+    }
+
+    .equiv-card:hover {
+      box-shadow: 0 4px 12px rgba(46, 204, 113, 0.15);
+      transform: translateY(-2px);
+      border-color: #2ecc71;
+    }
+
+    .equiv-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 10px;
+    }
+
+    .equiv-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #2ecc71;
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .equiv-formula {
+      font-size: 11px;
+      color: #999;
+      font-style: italic;
+      margin-bottom: 12px;
+      font-weight: 500;
+      letter-spacing: 0.2px;
+    }
+
+    .equiv-badges {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .equiv-badge {
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 3px;
+      background: #003366;
+      color: #fff;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      box-shadow: 0 1px 3px rgba(0, 51, 102, 0.1);
+      letter-spacing: 0.1px;
+    }
+
+    .equiv-badge-icon {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.6);
+    }
+
+    /* Architect Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 24px;
+      background: #d0d0d0;
+      margin: 0 8px;
+    }
+
+    .btn {
+      font-size: 13px;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+      background: #f8f9fa;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+      background: #e8e8e8;
+      border-color: #003366;
+      color: #003366;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn.active {
+      background: #003366;
+      color: #fff;
+      border-color: #003366;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.15);
+    }
+
+    .btn.danger {
+      border-color: #c33;
+      color: #c33;
+    }
+
+    .btn.danger:hover {
+      background: #fce8e8;
+      border-color: #c33;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* Zoom Controls */
+    .zoom-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+    }
+
+    .zoom-controls label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      margin-right: 4px;
+    }
+
+    .zoom-btn {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      font-size: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .zoom-display {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      min-width: 45px;
+      text-align: center;
+    }
+
+    /* Scale Indicator */
+    .scale-indicator {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #c33;
+      transition: all 0.25s ease;
+    }
+
+    .scale-indicator.set {
+      background: #2ecc71;
+      animation: pulse 0.5s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.3); }
+      100% { transform: scale(1); }
+    }
+
+    /* Scale Configuration */
+    .scale-config {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      padding: 1rem;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+      flex-wrap: wrap;
+    }
+
+    .scale-config label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .scale-config input {
+      width: 90px;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+      background: #fff;
+      color: #333;
+      font-size: 13px;
+      transition: all 0.25s ease;
+      font-weight: 500;
+    }
+
+    .scale-config input:focus {
+      outline: none;
+      border-color: #003366;
+      box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+      background: #fafbfc;
+    }
+
+    .scale-status {
+      font-size: 12px;
+      color: #999;
+      font-weight: 600;
+      min-width: 220px;
+      letter-spacing: 0.3px;
+    }
+
+    .scale-status.success {
+      color: #2ecc71;
+      font-weight: 700;
+    }
+
+    /* Canvas Area */
+    .canvas-wrap {
+      position: relative;
+      border: 2px solid #d0d0d0;
+      border-radius: 4px;
+      overflow: hidden;
+      background: #111;
+      cursor: crosshair;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 16 / 9;
+      margin-bottom: 1.5rem;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .canvas-wrap.drag-over {
+      border-color: #2ecc71;
+      background: rgba(46, 204, 113, 0.08);
+      box-shadow: 0 4px 16px rgba(46, 204, 113, 0.15);
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      cursor: crosshair;
+    }
+
+    .drop-zone {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      color: #666;
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    .drop-zone.hidden {
+      display: none;
+      pointer-events: none;
+    }
+
+    .drop-icon {
+      font-size: 52px;
+      animation: bounce 2s infinite;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .drop-zone-text {
+      text-align: center;
+    }
+
+    .drop-zone-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: #333;
+    }
+
+    .drop-zone-subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-top: 6px;
+    }
+
+    .upload-btn {
+      margin-top: 10px;
+      font-size: 13px;
+      padding: 10px 24px;
+      border-radius: 4px;
+      border: 2px solid #003366;
+      background: #003366;
+      color: #fff;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.25s ease;
+      display: inline-block;
+      letter-spacing: 0.3px;
+    }
+
+    .upload-btn:hover {
+      background: #002244;
+      border-color: #002244;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
+    }
+
+    #fileInput {
+      display: none;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.25rem;
+      }
+
+      .header h1 {
+        font-size: 24px;
+      }
+
+      .header p {
+        font-size: 13px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .scale-config {
+        justify-content: center;
+        gap: 10px;
+      }
+
+      .canvas-wrap {
+        aspect-ratio: auto;
+        min-height: 300px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+
+      .equiv-value {
+        font-size: 28px;
+      }
+
+      .btn {
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+
+      .message-panel {
+        position: static;
+        margin-bottom: 1rem;
+        max-width: 100%;
+      }
+    }
+
+    /* Utility Classes */
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border-width: 0;
     }
   </style>
 </head>
 <body>
+  <div class="container">
+    <header class="header">
+      <h1>Cálculo de Campo Colimado</h1>
+      <h3>Ferramenta para análise de campo colimado em radioterapia 3D</h3>
+      <h3>Para utilizar, adicione uma imagem de um campo colimado, depois, calibre com o gratículo para gerar a escala de 1 cm, e então, contorne o campo colimado</h3>
+    </header>
 
-<h1>Cálculo de Campo Equivalente (Radioterapia)</h1>
+    <!-- Message Panel -->
+    <div class="message-panel" id="messagePanel">📍 Clique em 2 pontos do gratículo separados por 1 cm</div>
 
-<div class="container">
-
-  <div class="panel">
-    <label>Selecionar imagem do campo:</label>
-    <input type="file" id="imageLoader" accept="image/*">
-
-    <label>Contraste / Threshold:</label>
-    <input type="range" id="threshold" min="0" max="255" value="100">
-
-    <div class="info">
-      Clique em dois pontos da imagem para calibrar a escala.
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Área</div>
+        <div class="stat-value">
+          <span id="areaVal">—</span>
+          <span class="stat-unit">cm²</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Perímetro</div>
+        <div class="stat-value">
+          <span id="perimVal">—</span>
+          <span class="stat-unit">cm</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pontos do contorno</div>
+        <div class="stat-value">
+          <span id="ptCount">0</span>
+        </div>
+      </div>
+      <div class="equiv-card">
+        <div class="equiv-label">Campo Equivalente</div>
+        <div class="equiv-value">
+          <span id="equivVal">—</span>
+          <span class="stat-unit">cm</span>
+        </div>
+        <div class="equiv-formula">Feq = 4 × Área / Perímetro</div>
+        <div class="equiv-badges">
+          <span class="equiv-badge">
+            <span class="equiv-badge-icon"></span>
+            <span id="badge1"></span>
+          </span>
+          <span class="equiv-badge">
+            <span class="equiv-badge-icon"></span>
+            <span id="badge2"></span>
+          </span>
+        </div>
+      </div>
     </div>
 
-    <canvas id="canvas"></canvas>
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button id="btnScale" class="btn active" title="Clique em dois pontos separados por 1 cm no gratículo">
+          <span class="scale-indicator" id="scaleDot"></span>
+          <span>Calibrar escala</span>
+        </button>
+      </div>
+      <div class="toolbar-separator"></div>
+      <div class="toolbar-group">
+        <button id="btnDraw" class="btn" title="Iniciar desenho do contorno">Desenhar contorno</button>
+        <button id="btnUndo" class="btn" title="Remover último ponto">← Desfazer</button>
+        <button id="btnClose" class="btn" title="Fechar polígono manualmente">Fechar polígono</button>
+      </div>
+      <div class="toolbar-separator"></div>
+      <button id="btnClear" class="btn danger" title="Limpar todos os dados">🗑 Limpar tudo</button>
+      <div class="toolbar-separator"></div>
+      <div class="zoom-controls">
+        <label for="zoomLabel">Zoom:</label>
+        <button id="btnZoomOut" class="btn zoom-btn" title="Diminuir zoom">−</button>
+        <div class="zoom-display" id="zoomDisplay">100%</div>
+        <button id="btnZoomIn" class="btn zoom-btn" title="Aumentar zoom">+</button>
+      </div>
+    </div>
 
-    <label>Distância real entre os pontos (cm):</label>
-    <input type="number" id="realDistance" step="0.1" value="10">
+    <div class="scale-config">
+      <label for="realDist">Distância real entre pontos:</label>
+      <input type="number" id="realDist" value="10" min="0.1" max="100" step="0.5">
+      <span>mm</span>
+      <span id="scaleStatus" class="scale-status">— escala não configurada</span>
+    </div>
 
-    <button id="calculateBtn">
-      Calcular Campo Equivalente
-    </button>
-
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">⬆️</div>
+        <div class="drop-zone-text">
+          <div class="drop-zone-title">Arraste uma imagem aqui</div>
+          <div class="drop-zone-subtitle">ou clique para selecionar</div>
+        </div>
+        <button class="upload-btn" id="uploadBtn">Selecionar imagem</button>
+      </div>
+      <canvas id="mainCanvas"></canvas>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
   </div>
 
-  <div class="panel">
-    <h2>Resultados</h2>
+  <script>
+    // DOM Elements
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+    const wrap = document.getElementById('canvasWrap');
+    const dropZone = document.getElementById('dropZone');
+    const messagePanel = document.getElementById('messagePanel');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const realDistInput = document.getElementById('realDist');
+    const zoomDisplay = document.getElementById('zoomDisplay');
 
-    <div class="steps">
-      <b>Equação:</b><br>
-      Ceq = 4 × A / P
-    </div>
+    // Constants - Updated with Architect theme colors
+    const COLORS = {
+      calibration: '#c33',
+      calibrationBg: 'rgba(204, 51, 51, 0.15)',
+      polygon: '#2ecc71',
+      polygonBg: 'rgba(46, 204, 113, 0.18)',
+      polygonLight: '#52d681',
+      white: '#fff'
+    };
 
-    <div class="result" id="results">
-      Aguardando processamento...
-    </div>
-  </div>
+    const SIZES = {
+      calibrationPoint: 6,
+      polygonPointFirst: 6,
+      polygonPointRest: 4,
+      lineWidth: 2,
+      calibrationLineWidth: 1.5,
+      closeThreshold: 12
+    };
 
-</div>
+    // State
+    let img = null;
+    let mode = 'scale'; // 'scale' | 'draw'
+    let scalePoints = [];
+    let scalePx = null;
+    let scaleMm = null;
+    let polyPoints = [];
+    let closed = false;
+    let zoomLevel = 1;
 
-<script>
-
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-
-const imageLoader = document.getElementById('imageLoader');
-const thresholdSlider = document.getElementById('threshold');
-const calculateBtn = document.getElementById('calculateBtn');
-
-let img = new Image();
-
-let calibrationPoints = [];
-let pixelsPerCm = null;
-
-imageLoader.addEventListener('change', handleImage);
-
-function handleImage(e){
-
-  const reader = new FileReader();
-
-  reader.onload = function(event){
-
-    img.onload = function(){
-
-      canvas.width = img.width;
-      canvas.height = img.height;
-
-      ctx.drawImage(img,0,0);
-
-      calibrationPoints = [];
-      pixelsPerCm = null;
+    // Utility Functions
+    function toCanvas(ex, ey) {
+      const r = canvas.getBoundingClientRect();
+      return [
+        (ex - r.left) * (canvas.width / r.width),
+        (ey - r.top) * (canvas.height / r.height)
+      ];
     }
 
-    img.src = event.target.result;
-  }
+    function dist(a, b) {
+      return Math.sqrt((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2);
+    }
 
-  reader.readAsDataURL(e.target.files[0]);
-}
+    function updateMessage(text) {
+      messagePanel.textContent = text;
+    }
 
-canvas.addEventListener('click', function(e){
+    function openFileInput() {
+      fileInput.click();
+    }
 
-  const rect = canvas.getBoundingClientRect();
+    // Zoom Functions
+    function setZoom(level) {
+      zoomLevel = Math.max(0.5, Math.min(3, level));
+      zoomDisplay.textContent = Math.round(zoomLevel * 100) + '%';
+      render();
+    }
 
-  const x = e.clientX - rect.left;
-  const y = e.clientY - rect.top;
+    function zoomIn() {
+      setZoom(zoomLevel + 0.2);
+    }
 
-  calibrationPoints.push({x,y});
+    function zoomOut() {
+      setZoom(zoomLevel - 0.2);
+    }
 
-  ctx.fillStyle = "red";
-  ctx.beginPath();
-  ctx.arc(x,y,5,0,Math.PI*2);
-  ctx.fill();
+    // Rendering
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  if(calibrationPoints.length === 2){
+      if (img) {
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.scale(zoomLevel, zoomLevel);
+        ctx.translate(-canvas.width / 2, -canvas.height / 2);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        ctx.restore();
+      }
 
-    const dx = calibrationPoints[1].x - calibrationPoints[0].x;
-    const dy = calibrationPoints[1].y - calibrationPoints[0].y;
+      renderCalibrationPoints();
+      renderPolygon();
+    }
 
-    const pixelDistance = Math.sqrt(dx*dx + dy*dy);
+    function renderCalibrationPoints() {
+      scalePoints.forEach((p, i) => {
+        // Point circle
+        ctx.beginPath();
+        ctx.arc(p[0], p[1], SIZES.calibrationPoint, 0, Math.PI * 2);
+        ctx.fillStyle = COLORS.calibration;
+        ctx.fill();
+        ctx.strokeStyle = COLORS.white;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
 
-    const realDistance = parseFloat(document.getElementById('realDistance').value);
-
-    pixelsPerCm = pixelDistance / realDistance;
-
-    alert("Escala calibrada!");
-  }
-});
-
-thresholdSlider.addEventListener('input', processImage);
-
-function processImage(){
-
-  if(!img.src) return;
-
-  ctx.drawImage(img,0,0);
-
-  const threshold = parseInt(thresholdSlider.value);
-
-  const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-
-  const data = imageData.data;
-
-  for(let i=0;i<data.length;i+=4){
-
-    const r = data[i];
-    const g = data[i+1];
-    const b = data[i+2];
-
-    const gray = (r+g+b)/3;
-
-    const value = gray > threshold ? 255 : 0;
-
-    data[i] = value;
-    data[i+1] = value;
-    data[i+2] = value;
-  }
-
-  ctx.putImageData(imageData,0,0);
-}
-
-calculateBtn.addEventListener('click', calculateEquivalentField);
-
-function calculateEquivalentField(){
-
-  if(!pixelsPerCm){
-
-    alert("Calibre a escala primeiro.");
-    return;
-  }
-
-  processImage();
-
-  const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
-  const data = imageData.data;
-
-  let areaPixels = 0;
-  let perimeterPixels = 0;
-
-  const width = canvas.width;
-  const height = canvas.height;
-
-  function isWhite(index){
-    return data[index] === 255;
-  }
-
-  for(let y=1; y<height-1; y++){
-
-    for(let x=1; x<width-1; x++){
-
-      const idx = (y * width + x) * 4;
-
-      if(isWhite(idx)){
-
-        areaPixels++;
-
-        const neighbors = [
-          ((y-1)*width + x)*4,
-          ((y+1)*width + x)*4,
-          (y*width + (x-1))*4,
-          (y*width + (x+1))*4
-        ];
-
-        let border = false;
-
-        for(let n of neighbors){
-
-          if(!isWhite(n)){
-            border = true;
-          }
+        // Dashed line between calibration points
+        if (scalePoints.length === 2 && i === 0) {
+          ctx.beginPath();
+          ctx.setLineDash([4, 3]);
+          ctx.moveTo(scalePoints[0][0], scalePoints[0][1]);
+          ctx.lineTo(scalePoints[1][0], scalePoints[1][1]);
+          ctx.strokeStyle = COLORS.calibration;
+          ctx.lineWidth = SIZES.calibrationLineWidth;
+          ctx.stroke();
+          ctx.setLineDash([]);
         }
+      });
+    }
 
-        if(border){
-          perimeterPixels++;
-        }
+    function renderPolygon() {
+      if (polyPoints.length === 0) return;
+
+      // Draw path
+      ctx.beginPath();
+      ctx.moveTo(polyPoints[0][0], polyPoints[0][1]);
+      polyPoints.slice(1).forEach(p => ctx.lineTo(p[0], p[1]));
+
+      if (closed) ctx.closePath();
+
+      ctx.strokeStyle = COLORS.polygon;
+      ctx.lineWidth = SIZES.lineWidth;
+      ctx.stroke();
+
+      // Fill if closed
+      if (closed) {
+        ctx.fillStyle = COLORS.polygonBg;
+        ctx.fill();
+      }
+
+      // Draw points
+      polyPoints.forEach((p, i) => {
+        ctx.beginPath();
+        const radius = i === 0 ? SIZES.polygonPointFirst : SIZES.polygonPointRest;
+        ctx.arc(p[0], p[1], radius, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? COLORS.polygon : COLORS.polygonLight;
+        ctx.fill();
+        ctx.strokeStyle = COLORS.white;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      });
+    }
+
+    // Calculations
+    function calcStats() {
+      if (!scalePx || polyPoints.length < 3 || !closed) return;
+
+      const pxPerMm = scalePx / scaleMm;
+      const pxPerCm = pxPerMm * 10;
+
+      // Calculate area using shoelace formula
+      let areaPx2 = 0;
+      const n = polyPoints.length;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        areaPx2 += polyPoints[i][0] * polyPoints[j][1];
+        areaPx2 -= polyPoints[j][0] * polyPoints[i][1];
+      }
+      areaPx2 = Math.abs(areaPx2) / 2;
+      const areaCm2 = areaPx2 / (pxPerCm * pxPerCm);
+
+      // Calculate perimeter
+      let perimPx = 0;
+      for (let i = 0; i < n; i++) {
+        perimPx += dist(polyPoints[i], polyPoints[(i + 1) % n]);
+      }
+      const perimCm = perimPx / pxPerCm;
+
+      // Calculate equivalent square field
+      const equiv = (4 * areaCm2) / perimCm;
+
+      // Update UI
+      document.getElementById('areaVal').textContent = areaCm2.toFixed(2);
+      document.getElementById('perimVal').textContent = perimCm.toFixed(2);
+      document.getElementById('equivVal').textContent = equiv.toFixed(2);
+
+      const sx = Math.sqrt(areaCm2).toFixed(2);
+      document.getElementById('badge1').textContent = `Campo quad.: ${sx} × ${sx} cm`;
+      document.getElementById('badge2').textContent = `Feq = ${equiv.toFixed(2)} cm`;
+    }
+
+    // Mode Management
+    function setMode(m) {
+      mode = m;
+      document.getElementById('btnScale').classList.toggle('active', m === 'scale');
+      document.getElementById('btnDraw').classList.toggle('active', m === 'draw');
+
+      if (m === 'scale') {
+        updateMessage('📍 Clique em 2 pontos do gratículo separados por 1 cm');
+      } else if (m === 'draw') {
+        updateMessage('🖱 Clique para adicionar pontos ao contorno do campo');
       }
     }
-  }
 
-  const areaCm2 = areaPixels / (pixelsPerCm * pixelsPerCm);
+    // Event Listeners - Canvas
+    canvas.addEventListener('click', e => {
+      if (!img) return;
 
-  const perimeterCm = perimeterPixels / pixelsPerCm;
+      const [cx, cy] = toCanvas(e.clientX, e.clientY);
+      const adjustedCx = canvas.width / 2 + (cx - canvas.width / 2) / zoomLevel;
+      const adjustedCy = canvas.height / 2 + (cy - canvas.height / 2) / zoomLevel;
 
-  const ceq = (4 * areaCm2) / perimeterCm;
+      if (mode === 'scale') {
+        handleScaleMode(adjustedCx, adjustedCy);
+      } else if (mode === 'draw' && !closed) {
+        handleDrawMode(adjustedCx, adjustedCy);
+      }
+    });
 
-  document.getElementById('results').innerHTML = `
-    <b>Área:</b> ${areaCm2.toFixed(2)} cm²<br><br>
-    <b>Perímetro:</b> ${perimeterCm.toFixed(2)} cm<br><br>
-    <b>Campo Equivalente:</b> ${ceq.toFixed(2)} cm
-  `;
-}
+    function handleScaleMode(cx, cy) {
+      if (scalePoints.length >= 2) scalePoints = [];
+      scalePoints.push([cx, cy]);
 
-</script>
+      if (scalePoints.length === 2) {
+        scalePx = dist(scalePoints[0], scalePoints[1]);
+        scaleMm = parseFloat(realDistInput.value);
+        const pxPerCm = (scalePx / scaleMm) * 10;
 
+        const statusEl = document.getElementById('scaleStatus');
+        statusEl.textContent = `✓ Calibrado — ${pxPerCm.toFixed(1)} px/cm`;
+        statusEl.classList.add('success');
+        document.getElementById('scaleDot').classList.add('set');
+
+        setMode('draw');
+        updateMessage('✅ Calibração concluída! Comece a desenhar o contorno.');
+      }
+
+      render();
+    }
+
+    function handleDrawMode(cx, cy) {
+      // Check if clicking near first point to close
+      if (polyPoints.length > 2 && dist([cx, cy], polyPoints[0]) < SIZES.closeThreshold) {
+        closed = true;
+        updateMessage('✅ Campo fechado! Veja os resultados acima.');
+        calcStats();
+      } else {
+        polyPoints.push([cx, cy]);
+        document.getElementById('ptCount').textContent = polyPoints.length;
+
+        if (polyPoints.length === 1) {
+          updateMessage('Adicione o segundo ponto...');
+        } else if (polyPoints.length === 2) {
+          updateMessage('Continue adicionando pontos ou feche o polígono...');
+        } else {
+          updateMessage('Clique próximo ao 1º ponto para fechar o contorno');
+        }
+      }
+
+      render();
+    }
+
+    // Event Listeners - Buttons
+    document.getElementById('btnScale').addEventListener('click', () => {
+      scalePoints = [];
+      scalePx = null;
+      scaleMm = null;
+      document.getElementById('scaleDot').classList.remove('set');
+      const statusEl = document.getElementById('scaleStatus');
+      statusEl.textContent = '— escala não configurada';
+      statusEl.classList.remove('success');
+      setMode('scale');
+      updateMessage('📍 Clique em 2 pontos do gratículo para calibrar');
+      render();
+    });
+
+    document.getElementById('btnDraw').addEventListener('click', () => {
+      if (!scalePx) {
+        updateMessage('⚠ Você deve calibrar a escala primeiro!');
+        return;
+      }
+      setMode('draw');
+    });
+
+    document.getElementById('btnUndo').addEventListener('click', () => {
+      if (!closed && polyPoints.length > 0) {
+        polyPoints.pop();
+        document.getElementById('ptCount').textContent = polyPoints.length;
+        render();
+        updateMessage('Ponto removido. Continue desenando...');
+      }
+    });
+
+    document.getElementById('btnClose').addEventListener('click', () => {
+      if (polyPoints.length >= 3 && !closed) {
+        closed = true;
+        updateMessage('✅ Campo fechado manualmente!');
+        calcStats();
+        render();
+      }
+    });
+
+    document.getElementById('btnClear').addEventListener('click', () => {
+      polyPoints = [];
+      closed = false;
+      scalePoints = [];
+      scalePx = null;
+      scaleMm = null;
+
+      document.getElementById('ptCount').textContent = '0';
+      document.getElementById('areaVal').textContent = '—';
+      document.getElementById('perimVal').textContent = '—';
+      document.getElementById('equivVal').textContent = '—';
+      document.getElementById('scaleDot').classList.remove('set');
+
+      const statusEl = document.getElementById('scaleStatus');
+      statusEl.textContent = '— escala não configurada';
+      statusEl.classList.remove('success');
+
+      setMode('scale');
+      updateMessage('Todos os dados foram limpos. Comece novamente!');
+      render();
+    });
+
+    document.getElementById('btnZoomIn').addEventListener('click', zoomIn);
+    document.getElementById('btnZoomOut').addEventListener('click', zoomOut);
+
+    realDistInput.addEventListener('change', () => {
+      if (closed && scalePx) {
+        scaleMm = parseFloat(realDistInput.value);
+        calcStats();
+      }
+    });
+
+    // File Upload
+    function loadImage(file) {
+      const reader = new FileReader();
+
+      reader.onload = e => {
+        const img_elem = new Image();
+
+        img_elem.onload = () => {
+          img = img_elem;
+          const maxW = wrap.clientWidth - 2;
+          const maxH = 820;
+          const ratio = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+
+          canvas.width = Math.round(img.naturalWidth * ratio);
+          canvas.height = Math.round(img.naturalHeight * ratio);
+
+          dropZone.classList.add('hidden');
+          zoomLevel = 1;
+          zoomDisplay.textContent = '100%';
+          render();
+          updateMessage('📍 Calibre a escala: clique em 2 pontos do gratículo');
+        };
+
+        img_elem.src = e.target.result;
+      };
+
+      reader.readAsDataURL(file);
+    }
+
+    // Single upload button listener
+    uploadBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openFileInput();
+    });
+
+    fileInput.addEventListener('change', e => {
+      if (e.target.files[0]) {
+        loadImage(e.target.files[0]);
+      }
+    });
+
+    // Drag & Drop
+    wrap.addEventListener('dragover', e => {
+      e.preventDefault();
+      wrap.classList.add('drag-over');
+    });
+
+    wrap.addEventListener('dragleave', () => {
+      wrap.classList.remove('drag-over');
+    });
+
+    wrap.addEventListener('drop', e => {
+      e.preventDefault();
+      wrap.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) {
+        loadImage(e.dataTransfer.files[0]);
+      }
+    });
+
+    // Drop zone click - only if not clicking the button
+    dropZone.addEventListener('click', (e) => {
+      if (e.target.id === 'uploadBtn') return;
+      openFileInput();
+    });
+
+    // Initialize
+    setMode('scale');
+    render();
+  </script>
 </body>
 </html>
