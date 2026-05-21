@@ -610,7 +610,7 @@
           <span id="equivVal">—</span>
           <span class="stat-unit">cm</span>
         </div>
-        <div class="equiv-formula">Feq = 4 × Área / Perímetro</div>
+        <div class="equiv-formula">Ceq = 4 × Área / Perímetro</div>
         <div class="equiv-badges">
           <span class="equiv-badge">
             <span class="equiv-badge-icon"></span>
@@ -855,7 +855,7 @@
       document.getElementById('equivVal').textContent = equiv.toFixed(2);
 
       const sx = Math.sqrt(areaCm2).toFixed(2);
-      document.getElementById('badge1').textContent = `Campo quad.: ${equiv} × ${equiv} cm`;
+      document.getElementById('badge1').textContent = `Campo quadrado.: ${equiv}.toFixed(2) × ${equiv}.toFixed(2) cm`;
       
     }
 
