@@ -1,442 +1,869 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8">
-<title>Campo Equivalente Colimado</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cálculo de Campo Colimado - Radioterapia 3D</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    /* Architect Theme - Modern Professional Design */
+    * {
+      box-sizing: border-box;
+    }
 
-<style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #333;
+    }
 
-body{
-    font-family:Arial, sans-serif;
-    margin:20px;
-    background:#f5f5f5;
-}
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
 
-h2{
-    margin-bottom:10px;
-}
+    /* Main Container */
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 8px 32px rgba(0, 51, 102, 0.15);
+      padding: 2.5rem;
+    }
 
-canvas{
-    border:1px solid #444;
-    background:white;
-    cursor:crosshair;
-}
+    /* Header Section */
+    .header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      border-bottom: 3px solid #003366;
+      padding-bottom: 2rem;
+    }
 
-.toolbar{
-    margin:10px 0;
-}
+    .header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      color: #003366;
+      margin: 0 0 0.5rem 0;
+      letter-spacing: -0.5px;
+    }
 
-button{
-    padding:8px 12px;
-    margin-right:5px;
-    cursor:pointer;
-}
+    .header h3 {
+      font-size: 16px;
+      color: #666;
+      margin: 12px 0;
+      font-weight: 500;
+      line-height: 1.6;
+    }
 
-#resultado{
-    margin-top:15px;
-    font-size:18px;
-    background:white;
-    padding:10px;
-    border:1px solid #ccc;
-}
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
 
-.info{
-    margin-top:10px;
-    background:white;
-    padding:10px;
-    border:1px solid #ccc;
-}
+    .stat-card {
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
 
-</style>
+    .stat-card:hover {
+      box-shadow: 0 4px 16px rgba(0, 51, 102, 0.12);
+      transform: translateY(-3px);
+      border-color: #003366;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 12px;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: #003366;
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .stat-unit {
+      font-size: 14px;
+      color: #999;
+      font-weight: 400;
+    }
+
+    /* Results Card */
+    .results-card {
+      background: linear-gradient(135deg, rgba(46, 204, 113, 0.12) 0%, rgba(46, 204, 113, 0.06) 100%);
+      border: 2px solid #2ecc71;
+      border-radius: 6px;
+      padding: 1.5rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(46, 204, 113, 0.1);
+      margin-top: 2rem;
+    }
+
+    .results-card:hover {
+      box-shadow: 0 4px 16px rgba(46, 204, 113, 0.15);
+      transform: translateY(-2px);
+    }
+
+    .results-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin-bottom: 15px;
+    }
+
+    .results-content {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .result-item {
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 4px;
+      border-left: 3px solid #2ecc71;
+    }
+
+    .result-item-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #999;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .result-item-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: #2ecc71;
+    }
+
+    /* Info Panel */
+    .info-panel {
+      background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%);
+      border-left: 4px solid #003366;
+      border-radius: 6px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.08);
+    }
+
+    .info-panel h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: #003366;
+      margin: 0 0 12px 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .info-panel p {
+      margin: 8px 0;
+      font-size: 14px;
+      color: #555;
+      line-height: 1.6;
+    }
+
+    .info-step {
+      margin: 10px 0;
+      padding-left: 24px;
+      position: relative;
+    }
+
+    .info-step::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: #2ecc71;
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .info-step b {
+      color: #003366;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border-radius: 6px;
+      border: 1px solid #d0d0d0;
+      align-items: center;
+    }
+
+    .toolbar-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 28px;
+      background: #d0d0d0;
+      margin: 0 6px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border: 1px solid #d0d0d0;
+      background: #f8f9fa;
+      color: #333;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      white-space: nowrap;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn:hover {
+      background: #e8e8e8;
+      border-color: #003366;
+      color: #003366;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.1);
+      transform: translateY(-1px);
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn.primary {
+      background: #003366;
+      color: #fff;
+      border-color: #003366;
+    }
+
+    .btn.primary:hover {
+      background: #002244;
+      border-color: #002244;
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.2);
+    }
+
+    .btn.success {
+      background: #2ecc71;
+      color: #fff;
+      border-color: #2ecc71;
+    }
+
+    .btn.success:hover {
+      background: #27ae60;
+      border-color: #27ae60;
+    }
+
+    .btn.danger {
+      background: #e74c3c;
+      color: #fff;
+      border-color: #e74c3c;
+    }
+
+    .btn.danger:hover {
+      background: #c0392b;
+      border-color: #c0392b;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* File Input */
+    .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 1.5rem;
+    }
+
+    .file-input-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #003366 0%, #004a99 100%);
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 51, 102, 0.15);
+    }
+
+    .file-input-label:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 51, 102, 0.25);
+    }
+
+    #arquivo {
+      display: none;
+    }
+
+    .file-name {
+      font-size: 12px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    /* Scale Configuration */
+    .scale-config {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 1rem;
+      background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+      border-left: 4px solid #ff9800;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .scale-config label {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .scale-config input {
+      width: 100px;
+      padding: 8px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px;
+      background: #fff;
+      color: #333;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.25s ease;
+    }
+
+    .scale-config input:focus {
+      outline: none;
+      border-color: #003366;
+      box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+      background: #fafbfc;
+    }
+
+    .scale-config span {
+      font-size: 12px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    /* Canvas Area */
+    .canvas-wrapper {
+      position: relative;
+      border: 2px solid #d0d0d0;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #1a1a1a;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+    }
+
+    canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 100%;
+      cursor: crosshair;
+    }
+
+    .canvas-empty {
+      text-align: center;
+      color: #999;
+      padding: 3rem;
+    }
+
+    .canvas-empty i {
+      font-size: 48px;
+      margin-bottom: 1rem;
+      display: block;
+      color: #666;
+    }
+
+    .canvas-empty p {
+      margin: 0;
+      font-size: 14px;
+    }
+
+    /* Zoom Controls */
+    .zoom-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+      border: 1px solid #d0d0d0;
+      border-radius: 6px;
+      margin-bottom: 1.5rem;
+    }
+
+    .zoom-controls label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .zoom-controls input[type="range"] {
+      width: 150px;
+      cursor: pointer;
+    }
+
+    .zoom-display {
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      min-width: 50px;
+      text-align: center;
+      padding: 6px 12px;
+      background: #fff;
+      border-radius: 4px;
+      border: 1px solid #d0d0d0;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 1.5rem;
+      }
+
+      .header h1 {
+        font-size: 28px;
+      }
+
+      .header h3 {
+        font-size: 14px;
+      }
+
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .results-content {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .toolbar-separator {
+        display: none;
+      }
+
+      .btn {
+        font-size: 12px;
+        padding: 8px 14px;
+      }
+
+      .canvas-wrapper {
+        min-height: 300px;
+      }
+
+      .stat-value {
+        font-size: 28px;
+      }
+
+      .file-input-label {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+
+    /* Utility */
+    .text-center {
+      text-align: center;
+    }
+
+    .mt-2 {
+      margin-top: 2rem;
+    }
+
+    .mb-2 {
+      margin-bottom: 2rem;
+    }
+  </style>
 </head>
 
 <body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <h1><i class="fas fa-calculator"></i> Cálculo de Campo Colimado</h1>
+      <h3>Ferramenta para análise de campo colimado em radioterapia 3D</h3>
+      <h3>Calibre a escala usando pontos conhecidos, depois contorne o campo para calcular área, perímetro e campo equivalente</h3>
+    </header>
 
-<h2>Estimador de Campo Equivalente Colimado</h2>
+    <!-- Info Panel -->
+    <div class="info-panel">
+      <h4><i class="fas fa-info-circle"></i> Como usar</h4>
+      <div class="info-step"><b>Passo 1:</b> Selecione uma imagem do campo colimado</div>
+      <div class="info-step"><b>Passo 2:</b> Clique em dois pontos de distância conhecida para calibrar a escala</div>
+      <div class="info-step"><b>Passo 3:</b> Informe a distância real em cm entre os pontos</div>
+      <div class="info-step"><b>Passo 4:</b> Contorne o campo colimado com múltiplos cliques</div>
+      <div class="info-step"><b>Passo 5:</b> Clique em "Calcular" para obter os resultados</div>
+    </div>
 
-<input type="file" id="arquivo" accept="image/*">
+    <!-- File Input -->
+    <div class="file-input-wrapper">
+      <label for="arquivo" class="file-input-label">
+        <i class="fas fa-upload"></i> Selecionar Imagem
+      </label>
+      <input type="file" id="arquivo" accept="image/*">
+      <div class="file-name" id="fileName"></div>
+    </div>
 
-<div class="toolbar">
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Pontos do Contorno</div>
+        <div class="stat-value">
+          <span id="pointCount">0</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Pontos de Calibração</div>
+        <div class="stat-value">
+          <span id="scaleCount">0</span>
+          <span class="stat-unit">/ 2</span>
+        </div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Status</div>
+        <div class="stat-value" id="status" style="font-size: 16px; color: #ff9800;">
+          Pronto
+        </div>
+      </div>
+    </div>
 
-Zoom:
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+      <label for="zoom">Zoom:</label>
+      <input type="range" id="zoom" min="20" max="600" value="100">
+      <span class="zoom-display" id="zoomTexto">100%</span>
+    </div>
 
-<input type="range"
-       id="zoom"
-       min="20"
-       max="600"
-       value="100">
+    <!-- Scale Configuration -->
+    <div class="scale-config">
+      <label for="distancia">Distância real entre pontos:</label>
+      <input type="number" id="distancia" value="10" min="0.1" max="100" step="0.5">
+      <span>cm</span>
+    </div>
 
-<span id="zoomTexto">100%</span>
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button id="btnScale" class="btn primary" onclick="modo='escala'; updateStatus();">
+          <i class="fas fa-ruler"></i> Calibrar Escala
+        </button>
+      </div>
+      <div class="toolbar-separator"></div>
+      <div class="toolbar-group">
+        <button id="btnDraw" class="btn" onclick="modo='contorno'; updateStatus();">
+          <i class="fas fa-pen"></i> Contornar Campo
+        </button>
+        <button id="btnUndo" class="btn" onclick="desfazer();">
+          <i class="fas fa-undo"></i> Desfazer
+        </button>
+        <button id="btnClear" class="btn danger" onclick="limparTudo();">
+          <i class="fas fa-trash"></i> Limpar
+        </button>
+      </div>
+      <div class="toolbar-separator"></div>
+      <button id="btnCalculate" class="btn success" onclick="calcularCampo();">
+        <i class="fas fa-calculator"></i> Calcular
+      </button>
+    </div>
 
-</div>
+    <!-- Canvas -->
+    <div class="canvas-wrapper">
+      <canvas id="canvas"></canvas>
+      <div class="canvas-empty" id="canvasEmpty">
+        <i class="fas fa-image"></i>
+        <p>Selecione uma imagem para começar</p>
+      </div>
+    </div>
 
-<div class="toolbar">
+    <!-- Results -->
+    <div id="resultados" class="results-card" style="display: none;">
+      <div class="results-label"><i class="fas fa-chart-bar"></i> Resultados da Análise</div>
+      <div class="results-content" id="resultadosContent"></div>
+    </div>
+  </div>
 
-<button onclick="modo='escala'">
-Calibrar Escala
-</button>
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    const arquivoInput = document.getElementById("arquivo");
+    const zoomInput = document.getElementById("zoom");
+    const fileNameDiv = document.getElementById("fileName");
+    const canvasEmpty = document.getElementById("canvasEmpty");
+    const resultadosDiv = document.getElementById("resultados");
 
-<button onclick="modo='contorno'">
-Contornar Campo
-</button>
+    let imagem = new Image();
+    let zoom = 1;
+    let modo = "escala";
 
-<button onclick="desfazer()">
-Desfazer Último Ponto
-</button>
+    let escalaPts = [];
+    let cmPorPixel = null;
+    let contorno = [];
 
-<button onclick="limparContorno()">
-Limpar Contorno
-</button>
+    // File input handler
+    arquivoInput.addEventListener("change", function(e) {
+      const arquivo = e.target.files[0];
+      if (!arquivo) return;
 
-<button onclick="calcularCampo()">
-Calcular Campo
-</button>
+      fileNameDiv.textContent = "📁 " + arquivo.name;
 
-</div>
-
-<div class="info">
-
-<b>Passo 1:</b> Clique em dois pontos de distância conhecida.<br>
-<b>Passo 2:</b> Informe a distância real em cm.<br>
-<b>Passo 3:</b> Contorne o campo colimado com vários pontos.<br>
-<b>Passo 4:</b> Clique em "Calcular Campo".
-
-</div>
-
-<br>
-
-<canvas id="canvas"></canvas>
-
-<div id="resultado"></div>
-
-<script>
-
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-let imagem = new Image();
-
-let zoom = 1;
-
-let modo = "escala";
-
-let escalaPts = [];
-let cmPorPixel = null;
-
-let contorno = [];
-
-document.getElementById("arquivo").onchange = function(e){
-
-    const arquivo = e.target.files[0];
-
-    if(!arquivo) return;
-
-    const leitor = new FileReader();
-
-    leitor.onload = function(ev){
-
-        imagem.onload = function(){
-            desenhar();
-        }
-
+      const leitor = new FileReader();
+      leitor.onload = function(ev) {
+        imagem.onload = function() {
+          canvasEmpty.style.display = "none";
+          desenhar();
+        };
         imagem.src = ev.target.result;
-    }
+      };
+      leitor.readAsDataURL(arquivo);
+    });
 
-    leitor.readAsDataURL(arquivo);
-};
+    // Zoom handler
+    zoomInput.addEventListener("input", function() {
+      zoom = this.value / 100;
+      document.getElementById("zoomTexto").textContent = this.value + "%";
+      desenhar();
+    });
 
-document.getElementById("zoom").oninput = function(){
+    // Canvas click handler
+    canvas.addEventListener("click", function(e) {
+      if (!imagem.src) return;
 
-    zoom = this.value / 100;
+      const r = canvas.getBoundingClientRect();
+      const x = (e.clientX - r.left) / zoom;
+      const y = (e.clientY - r.top) / zoom;
 
-    document.getElementById("zoomTexto").innerHTML =
-        this.value + "%";
+      if (modo === "escala") {
+        escalaPts.push({ x, y });
+        document.getElementById("scaleCount").textContent = escalaPts.length;
 
-    desenhar();
-};
+        if (escalaPts.length === 2) {
+          const dPixel = Math.hypot(
+            escalaPts[1].x - escalaPts[0].x,
+            escalaPts[1].y - escalaPts[0].y
+          );
 
-canvas.addEventListener("click", function(e){
+          const distanciaReal = parseFloat(document.getElementById("distancia").value);
 
-    const r = canvas.getBoundingClientRect();
-
-    const x = (e.clientX - r.left) / zoom;
-    const y = (e.clientY - r.top) / zoom;
-
-    if(modo==="escala"){
-
-        escalaPts.push({x,y});
-
-        if(escalaPts.length===2){
-
-            const dPixel = Math.hypot(
-                escalaPts[1].x - escalaPts[0].x,
-                escalaPts[1].y - escalaPts[0].y
-            );
-
-            const distanciaReal =
-                parseFloat(
-                    prompt("Distância real (cm):")
-                );
-
-            if(distanciaReal>0){
-
-                cmPorPixel =
-                    distanciaReal / dPixel;
-
-                alert(
-                    "Escala calibrada com sucesso."
-                );
-            }
+          if (distanciaReal > 0) {
+            cmPorPixel = distanciaReal / dPixel;
+            document.getElementById("status").textContent = "✓ Calibrado";
+            document.getElementById("status").style.color = "#2ecc71";
+            modo = "contorno";
+            updateStatus();
+          }
         }
-    }
+      } else if (modo === "contorno") {
+        contorno.push({ x, y });
+        document.getElementById("pointCount").textContent = contorno.length;
+      }
 
-    if(modo==="contorno"){
-
-        contorno.push({x,y});
-    }
-
-    desenhar();
-
-});
-
-function desenhar(){
-
-    if(!imagem.src) return;
-
-    canvas.width = imagem.width * zoom;
-    canvas.height = imagem.height * zoom;
-
-    ctx.clearRect(
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    ctx.drawImage(
-        imagem,
-        0,
-        0,
-        canvas.width,
-        canvas.height
-    );
-
-    desenharEscala();
-
-    desenharContorno();
-}
-
-function desenharEscala(){
-
-    if(escalaPts.length===0) return;
-
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "red";
-
-    escalaPts.forEach(p=>{
-
-        ctx.beginPath();
-
-        ctx.arc(
-            p.x*zoom,
-            p.y*zoom,
-            8,
-            0,
-            Math.PI*2
-        );
-
-        ctx.fillStyle = "yellow";
-        ctx.fill();
-
-        ctx.stroke();
+      desenhar();
     });
 
-    if(escalaPts.length===2){
+    function updateStatus() {
+      document.getElementById("btnScale").classList.toggle("primary", modo === "escala");
+      document.getElementById("btnDraw").classList.toggle("primary", modo === "contorno");
+    }
 
+    function desenhar() {
+      if (!imagem.src) return;
+
+      canvas.width = imagem.width * zoom;
+      canvas.height = imagem.height * zoom;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(imagem, 0, 0, canvas.width, canvas.height);
+
+      desenharEscala();
+      desenharContorno();
+    }
+
+    function desenharEscala() {
+      if (escalaPts.length === 0) return;
+
+      ctx.lineWidth = 3;
+      ctx.strokeStyle = "#c33";
+
+      escalaPts.forEach(p => {
         ctx.beginPath();
-
-        ctx.moveTo(
-            escalaPts[0].x*zoom,
-            escalaPts[0].y*zoom
-        );
-
-        ctx.lineTo(
-            escalaPts[1].x*zoom,
-            escalaPts[1].y*zoom
-        );
-
+        ctx.arc(p.x * zoom, p.y * zoom, 8, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffeb3b";
+        ctx.fill();
         ctx.stroke();
-    }
-}
+      });
 
-function desenharContorno(){
-
-    if(contorno.length===0) return;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-        contorno[0].x*zoom,
-        contorno[0].y*zoom
-    );
-
-    for(let i=1;i<contorno.length;i++){
-
-        ctx.lineTo(
-            contorno[i].x*zoom,
-            contorno[i].y*zoom
-        );
+      if (escalaPts.length === 2) {
+        ctx.beginPath();
+        ctx.setLineDash([5, 5]);
+        ctx.moveTo(escalaPts[0].x * zoom, escalaPts[0].y * zoom);
+        ctx.lineTo(escalaPts[1].x * zoom, escalaPts[1].y * zoom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
     }
 
-    if(contorno.length>2){
+    function desenharContorno() {
+      if (contorno.length === 0) return;
 
+      ctx.beginPath();
+      ctx.moveTo(contorno[0].x * zoom, contorno[0].y * zoom);
+
+      for (let i = 1; i < contorno.length; i++) {
+        ctx.lineTo(contorno[i].x * zoom, contorno[i].y * zoom);
+      }
+
+      if (contorno.length > 2) {
         ctx.closePath();
-
-        ctx.fillStyle =
-            "rgba(0,255,0,0.20)";
-
+        ctx.fillStyle = "rgba(46, 204, 113, 0.2)";
         ctx.fill();
-    }
+      }
 
-    ctx.strokeStyle = "#00ff00";
-    ctx.lineWidth = 3;
-    ctx.stroke();
+      ctx.strokeStyle = "#2ecc71";
+      ctx.lineWidth = 3;
+      ctx.stroke();
 
-    contorno.forEach((p,i)=>{
-
+      contorno.forEach((p, i) => {
         ctx.beginPath();
-
-        ctx.arc(
-            p.x*zoom,
-            p.y*zoom,
-            7,
-            0,
-            Math.PI*2
-        );
-
-        if(i===0)
-            ctx.fillStyle="red";
-        else
-            ctx.fillStyle="cyan";
-
+        ctx.arc(p.x * zoom, p.y * zoom, 7, 0, Math.PI * 2);
+        ctx.fillStyle = i === 0 ? "#2ecc71" : "#52d681";
         ctx.fill();
-
         ctx.lineWidth = 2;
-        ctx.strokeStyle="black";
+        ctx.strokeStyle = "#fff";
         ctx.stroke();
 
-        ctx.fillStyle="white";
-        ctx.font="12px Arial";
-
-        ctx.fillText(
-            i+1,
-            p.x*zoom+10,
-            p.y*zoom-10
-        );
-
-    });
-}
-
-function desfazer(){
-
-    contorno.pop();
-
-    desenhar();
-}
-
-function limparContorno(){
-
-    contorno=[];
-
-    desenhar();
-
-    document.getElementById(
-        "resultado"
-    ).innerHTML="";
-}
-
-function calcularCampo(){
-
-    if(cmPorPixel===null){
-
-        alert(
-          "Calibre a escala primeiro."
-        );
-
-        return;
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px Arial";
+        ctx.fillText(i + 1, p.x * zoom + 10, p.y * zoom - 10);
+      });
     }
 
-    if(contorno.length<3){
-
-        alert(
-          "Defina pelo menos 3 pontos."
-        );
-
-        return;
+    function desfazer() {
+      if (modo === "contorno" && contorno.length > 0) {
+        contorno.pop();
+        document.getElementById("pointCount").textContent = contorno.length;
+        desenhar();
+      } else if (modo === "escala" && escalaPts.length > 0) {
+        escalaPts.pop();
+        document.getElementById("scaleCount").textContent = escalaPts.length;
+        desenhar();
+      }
     }
 
-    let area=0;
-    let perimetro=0;
+    function limparTudo() {
+      contorno = [];
+      escalaPts = [];
+      cmPorPixel = null;
+      modo = "escala";
 
-    for(
-        let i=0;
-        i<contorno.length;
-        i++
-    ){
+      document.getElementById("pointCount").textContent = "0";
+      document.getElementById("scaleCount").textContent = "0";
+      document.getElementById("status").textContent = "Pronto";
+      document.getElementById("status").style.color = "#ff9800";
+      resultadosDiv.style.display = "none";
 
-        let j =
-          (i+1)%contorno.length;
+      updateStatus();
+      desenhar();
+    }
 
-        area +=
-            contorno[i].x*
-            contorno[j].y
-            -
-            contorno[j].x*
-            contorno[i].y;
+    function calcularCampo() {
+      if (cmPorPixel === null) {
+        document.getElementById("status").textContent = "⚠ Calibre a escala";
+        document.getElementById("status").style.color = "#e74c3c";
+        return;
+      }
+
+      if (contorno.length < 3) {
+        document.getElementById("status").textContent = "⚠ Mínimo 3 pontos";
+        document.getElementById("status").style.color = "#e74c3c";
+        return;
+      }
+
+      let area = 0;
+      let perimetro = 0;
+
+      for (let i = 0; i < contorno.length; i++) {
+        let j = (i + 1) % contorno.length;
+
+        area += contorno[i].x * contorno[j].y - contorno[j].x * contorno[i].y;
 
         perimetro += Math.hypot(
-            contorno[j].x -
-            contorno[i].x,
-
-            contorno[j].y -
-            contorno[i].y
+          contorno[j].x - contorno[i].x,
+          contorno[j].y - contorno[i].y
         );
+      }
+
+      area = Math.abs(area) / 2;
+
+      const areaCm2 = area * cmPorPixel * cmPorPixel;
+      const periCm = perimetro * cmPorPixel;
+      const ceq = (4 * areaCm2) / periCm;
+
+      document.getElementById("resultadosContent").innerHTML = `
+        <div class="result-item">
+          <div class="result-item-label">Área</div>
+          <div class="result-item-value">${areaCm2.toFixed(2)} <span style="font-size: 12px; color: #999;">cm²</span></div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Perímetro</div>
+          <div class="result-item-value">${periCm.toFixed(2)} <span style="font-size: 12px; color: #999;">cm</span></div>
+        </div>
+        <div class="result-item">
+          <div class="result-item-label">Campo Equivalente</div>
+          <div class="result-item-value">${ceq.toFixed(2)} <span style="font-size: 12px; color: #999;">cm</span></div>
+        </div>
+      `;
+
+      resultadosDiv.style.display = "block";
+      document.getElementById("status").textContent = "✓ Calculado";
+      document.getElementById("status").style.color = "#2ecc71";
     }
-
-    area =
-        Math.abs(area)/2;
-
-    const areaCm2 =
-        area *
-        cmPorPixel *
-        cmPorPixel;
-
-    const periCm =
-        perimetro *
-        cmPorPixel;
-
-    const ceq =
-        (4*areaCm2) /
-        periCm;
-
-    document.getElementById(
-        "resultado"
-    ).innerHTML =
-
-    "<b>Área:</b> "
-    + areaCm2.toFixed(2)
-    + " cm²<br><br>"
-
-    + "<b>Perímetro:</b> "
-    + periCm.toFixed(2)
-    + " cm<br><br>"
-
-    + "<b>Campo Equivalente (Sterling):</b> "
-    + ceq.toFixed(2)
-    + " cm";
-}
-
-</script>
-
+  </script>
 </body>
 </html>
